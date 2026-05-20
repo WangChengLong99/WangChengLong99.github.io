@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>我的个人技术笔记</title>
+      <link>https://WangChengLong99.github.io</link>
+      <description>Last 10 notes on 我的个人技术笔记</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>sql知识点</title>
+    <link>https://WangChengLong99.github.io/sql/sql%E7%9F%A5%E8%AF%86%E7%82%B9</link>
+    <guid>https://WangChengLong99.github.io/sql/sql%E7%9F%A5%E8%AF%86%E7%82%B9</guid>
+    <description><![CDATA[  insert into system_dept (name,parent_id,status,org_type,create_time,update_time,deleted,tenant_id) values (&#039;安徽绿丞科技服务有限公司&#039;,1,0,2,NOW(),NOW(),FALSE,1), (&#039;合肥璞跃创业服务有限公司&#039;,1,0,2,NOW(),NOW(),FALSE,1), (&#039;安徽中安创谷科技园有限公司&#039;,1,0,2,NOW(),NOW(),FALSE,1), (&#039;集微信息技术(合肥)有限公司&#039;,1,... ]]></description>
+    <pubDate>Wed, 20 May 2026 06:49:31 GMT</pubDate>
+  </item><item>
+    <title>excel</title>
+    <link>https://WangChengLong99.github.io/excel/excel%E7%9F%A5%E8%AF%86%E7%82%B9</link>
+    <guid>https://WangChengLong99.github.io/excel/excel%E7%9F%A5%E8%AF%86%E7%82%B9</guid>
+    <description><![CDATA[ excel知识点 ]]></description>
+    <pubDate>Wed, 20 May 2026 06:46:48 GMT</pubDate>
+  </item><item>
+    <title>quartz构建obsidian</title>
+    <link>https://WangChengLong99.github.io/quartz%E6%9E%84%E5%BB%BAobsidian</link>
+    <guid>https://WangChengLong99.github.io/quartz%E6%9E%84%E5%BB%BAobsidian</guid>
+    <description><![CDATA[ aaaa b c. ]]></description>
+    <pubDate>Wed, 20 May 2026 06:41:24 GMT</pubDate>
+  </item><item>
+    <title>首页</title>
+    <link>https://WangChengLong99.github.io/</link>
+    <guid>https://WangChengLong99.github.io/</guid>
+    <description><![CDATA[ 我的个人技术笔记 ]]></description>
+    <pubDate>Wed, 23 Aug 2023 19:09:04 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>
