@@ -2,9 +2,8 @@
 tags:
   - python
   - jupyter
-title: jupyter
+title: jupyter总结
 ---
-
 # 合并单元格
 
 在 Jupyter Notebook 里，合并单元格是个很实用的功能，能让你的工作流程更流畅。它主要有两种方式：

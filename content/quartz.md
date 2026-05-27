@@ -1,9 +1,8 @@
 ---
-title: quartz可用markdown语法
+title: quartz中的markdown语法
 tags:
   - quartz
 ---
-
 # frontmatter
 
 Quartz supports the following frontmatter:

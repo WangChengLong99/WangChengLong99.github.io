@@ -4,6 +4,8 @@ tags:
   - python
 title: pymysql
 ---
+# 主要用法
+
 以下是对 `pymysql` 库中主要函数、方法和属性的系统总结。`pymysql` 遵循 [PEP 249](https://peps.python.org/pep-0249/)（Python 数据库 API v2.0），因此其接口与 `sqlite3`、`psycopg2` 等类似。
 
 ---
