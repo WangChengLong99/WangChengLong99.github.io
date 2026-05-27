@@ -1,0 +1,18 @@
+views:
+  - type: table
+    name: 表格
+    filters:
+      and:
+        - file.inFolder("content")
+        - file.ext != "base"
+    order:
+      - file.name
+      - title
+      - tags
+      - file.folder
+      - file.mtime
+    sort:
+      - property: file.name
+        direction: ASC
+    columnSize:
+      file.name: 210

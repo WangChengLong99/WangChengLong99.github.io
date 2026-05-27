@@ -1,4 +1,8 @@
-
+---
+tags:
+  - mysql
+title: mysql知识点
+---
 # 表结构的增删改（DDL）
 
 | 操作         | 常用语句                                                                                                                          | 说明                                                                                                                                                                                                                    |
@@ -825,3 +829,256 @@ SELECT * FROM t WHERE CAST(col AS UNSIGNED) = 0;
 - 显式转换使用 `CAST(expr AS type)` 或 `CONVERT(expr, type)`，可使代码清晰、避免隐式陷阱。
 - 注意 **字符串转数字时非数字开头会变成 0**，这种隐式行为可能导致逻辑错误和性能问题（索引失效）。
 - 处理用户输入或不确定格式的数据时，**务必显式转换并配合判空/默认值**，提高 SQL 的健壮性。
+
+# 变量与函数
+
+MySQL 没有严格命名为“变量函数”的内置函数分类，但围绕**变量的定义、赋值、读取和系统变量获取**，有一套丰富的语法和机制。下面从变量类型、使用方式、常用技巧以及相关“函数式”操作进行详解。
+
+---
+
+## 1. MySQL 变量的三种类型
+
+| 类型 | 声明方式 | 作用域 | 前缀 |
+|------|----------|--------|------|
+| **用户变量** | `SET @var = value` 或 `SELECT @var := expr` | 当前会话（连接） | `@` |
+| **系统变量** | 预先定义，通过 `SET` 修改 | 全局（GLOBAL）或会话（SESSION） | `@@` |
+| **局部变量** | 存储过程/函数内 `DECLARE var TYPE` | 存储程序内部 | 无前缀 |
+
+---
+
+## 2. 用户变量（@var）详解
+
+用户变量无需声明类型，MySQL 根据赋值自动推断，且在整个会话期间有效。
+
+### 2.1 赋值方式
+```sql
+-- 方式一：SET（可同时赋值多个，使用 = 或 :=）
+SET @name = 'Alice';
+SET @age := 30, @city := 'Hefei';
+
+-- 方式二：SELECT ... INTO（必须返回单行，或使用 LIMIT 1）
+SELECT phone INTO @phone FROM users WHERE id = 1;
+
+-- 方式三：在 SELECT 语句中使用 := 进行赋值（边查询边赋值）
+SELECT @num := COUNT(*) FROM orders;
+```
+
+### 2.2 读取
+```sql
+SELECT @name, @age, @phone;
+-- 或用于表达式
+SELECT * FROM products WHERE price > @avg_price;
+```
+
+### 2.3 未初始化的变量
+未赋值的用户变量值为 `NULL`，类型也为 `NULL`。在运算中可能产生意外结果，例如 `@undefined + 10` 结果为 `NULL`。
+
+```sql
+SELECT @unknown;   -- NULL
+SELECT @unknown + 1;  -- NULL
+```
+
+---
+
+## 3. 用户变量在查询中的实战技巧
+
+### 3.1 生成行号（MySQL 8.0 之前常用，8.0+ 建议用 `ROW_NUMBER()`）
+```sql
+SET @rownum = 0;
+SELECT @rownum := @rownum + 1 AS row_num, name, score
+FROM students
+ORDER BY score DESC;
+```
+
+### 3.2 计算累计总和
+```sql
+SET @cum := 0;
+SELECT month, amount, @cum := @cum + amount AS cumulative
+FROM monthly_sales
+ORDER BY month;
+```
+
+### 3.3 分组内排名（模拟 `RANK()`）
+```sql
+SET @rank = 0, @prev_score = NULL;
+SELECT name, score,
+       @rank := IF(@prev_score = score, @rank, @rank + 1) AS rank,
+       @prev_score := score
+FROM students
+ORDER BY score DESC;
+```
+注意：MySQL 对于 `SELECT` 中赋值表达式的求值顺序没有严格保证，上述写法在大多数情况下能正常运行，但官方文档提醒这种用法在涉及复杂查询时可能结果不确定。8.0 版本后推荐直接使用窗口函数。
+
+### 3.4 行间比较（计算差值）
+```sql
+SET @prev = NULL;
+SELECT date, close,
+       IF(@prev IS NULL, NULL, close - @prev) AS diff,
+       @prev := close
+FROM stock_prices
+ORDER BY date;
+```
+
+---
+
+## 4. 系统变量（@@）详解
+
+系统变量控制 MySQL 的行为，分为 **GLOBAL**（影响所有新连接）和 **SESSION**（仅当前连接）。
+
+### 4.1 查看系统变量
+```sql
+-- 查看所有系统变量
+SHOW VARIABLES;
+SHOW GLOBAL VARIABLES LIKE '%timeout%';
+
+-- 用 SELECT @@ 读取
+SELECT @@global.max_connections;   -- 全局值
+SELECT @@session.sql_mode;         -- 会话值（@@local 同义）
+SELECT @@sql_mode;                 -- 优先返回会话值
+```
+
+也可以从 `information_schema` 查询：
+```sql
+SELECT * FROM INFORMATION_SCHEMA.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'max_connections';
+SELECT * FROM INFORMATION_SCHEMA.SESSION_VARIABLES;
+```
+
+### 4.2 设置系统变量
+```sql
+-- 设置全局变量（需要 SUPER 权限）
+SET GLOBAL max_connections = 200;
+SET @@global.max_connections = 200;
+
+-- 设置会话变量
+SET SESSION sql_mode = 'STRICT_TRANS_TABLES';
+SET @@session.sql_mode = 'STRICT_TRANS_TABLES';
+SET sql_mode = 'STRICT_TRANS_TABLES';   -- 默认就是 SESSION
+```
+
+### 4.3 常用系统变量示例
+| 变量 | 说明 |
+|------|------|
+| `autocommit` | 自动提交 |
+| `max_connections` | 最大连接数 |
+| `sql_mode` | SQL 模式（严格模式等） |
+| `character_set_client` | 客户端字符集 |
+| `time_zone` | 时区 |
+| `version` | 只读，MySQL 版本 |
+
+版本变量其实可以通过 `SELECT VERSION();` 函数获取，但 `@@version` 也可。
+
+---
+
+## 5. 局部变量（DECLARE ...）简介
+
+仅用于存储过程、函数、触发器和事件中，语法严格。
+
+```sql
+CREATE PROCEDURE demo()
+BEGIN
+    DECLARE total INT DEFAULT 0;
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE cur CURSOR FOR SELECT amount FROM sales;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO total;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+    END LOOP;
+    CLOSE cur;
+    SELECT total;
+END;
+```
+
+局部变量的作用域在 `BEGIN...END` 块内，不能带有 `@` 前缀，且必须声明类型。
+
+---
+
+## 6. 与变量相关的“函数式”语法
+
+严格来说并没有函数叫“变量函数”，但以下几个常与变量配合使用，或能产生类似动态变量的效果：
+
+### 6.1 `SELECT ... INTO` 语句
+虽然不是函数，但可以把查询结果赋值给变量：
+```sql
+SELECT COUNT(*), AVG(score) INTO @cnt, @avg FROM exams;
+```
+
+### 6.2 `IFNULL()` / `COALESCE()` 处理变量为 NULL 的情况
+```sql
+SELECT @count := IFNULL(@count, 0) + 1;
+```
+
+### 6.3 `FIELD()` 和 `ELT()` —— 列表选择
+可实现类似于“变量值对应选项”的逻辑：
+```sql
+SET @color = 2;
+SELECT ELT(@color, 'Red', 'Green', 'Blue');   -- Green
+SELECT FIELD('Green', 'Red', 'Green', 'Blue'); -- 2
+```
+
+### 6.4 用户级锁函数（可视为一种全局命名变量）
+```sql
+SELECT GET_LOCK('my_lock', 10);   -- 获取锁，成功返回 1
+SELECT RELEASE_LOCK('my_lock');   -- 释放锁
+SELECT IS_FREE_LOCK('my_lock');   -- 检查锁是否空闲
+```
+
+### 6.5 `FOUND_ROWS()` / `ROW_COUNT()` 获取上一条语句影响行数
+```sql
+SELECT SQL_CALC_FOUND_ROWS * FROM users LIMIT 10;
+SELECT FOUND_ROWS();   -- 返回不带 LIMIT 的总行数
+SELECT ROW_COUNT();    -- 返回上条 UPDATE/DELETE/INSERT 影响行数
+```
+
+### 6.6 动态 SQL（借助变量构建语句）
+用户变量可以存储拼接的 SQL 字符串，然后通过预处理执行，实现动态“变量函数”功能：
+```sql
+SET @table = 'users';
+SET @query = CONCAT('SELECT * FROM ', @table);
+PREPARE stmt FROM @query;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+```
+
+---
+
+## 7. 使用变量的注意要点
+
+- **赋值与读取的顺序**：`SELECT` 语句中同时赋值和读取用户变量时，结果可能受优化器影响。避免在同一个非聚合查询的 `SELECT` 列表中既读取又修改同一个变量，除非你非常清楚执行顺序（MySQL 8.0 文档称此类操作不保证求值顺序）。
+- **类型推断**：用户变量的类型来自第一次赋值的值，后续赋值可能改变类型。如从字符串变为整数。
+- **事务与回滚**：用户变量的值不受 `ROLLBACK` 影响，因为变量操作不是事务性的。
+- **并发**：每个连接拥有独立的用户变量，不会被其他连接干扰。
+
+---
+
+## 8. 业务场景示例
+
+- **生成唯一序列号**：
+  ```sql
+  UPDATE serial_table SET current = LAST_INSERT_ID(current + 1) WHERE name = 'invoice';
+  SELECT LAST_INSERT_ID();   -- 获得下一个编号
+  ```
+  （这里使用了 `LAST_INSERT_ID` 函数，虽然不是直接变量，但可当作无锁序列号生成器）
+
+- **缓存中间结果**：
+  ```sql
+  SET @total = (SELECT SUM(amount) FROM orders WHERE year = 2026);
+  SELECT product, SUM(amount), SUM(amount)/@total AS percent
+  FROM orders WHERE year = 2026
+  GROUP BY product;
+  ```
+
+- **存储过滤条件**：
+  ```sql
+  SET @min_price = 100;
+  SELECT * FROM products WHERE price >= @min_price;
+  ```
+
+---
+
+**小结**  
+MySQL 虽然没有叫“变量函数”的独立分类，但通过**用户变量**、**系统变量**和**局部变量**，配合 `SET`、`SELECT ... INTO`、`:=` 等赋值语法，以及 `ELT()`、`FIELD()`、`GET_LOCK()` 等辅助函数，完全可以实现类似“变量函数”的动态效果。在处理行号、累积统计、动态 SQL 等场景中，这些技巧非常实用。
