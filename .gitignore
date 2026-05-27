@@ -1,4 +1,5 @@
 .DS_Store
+.base
 .gitignore
 node_modules
 public
