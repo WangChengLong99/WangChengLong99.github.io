@@ -1,7 +1,7 @@
 ---
 tags:
   - 首页
-title: excel总结
+title: excel实际问题
 ---
 # 跨工作簿引用
 
@@ -39,4 +39,8 @@ title: excel总结
 =ISNUMBER(MATCH(A1, {"a","b","c"}, 0))
 =ISNUMBER(MATCH(A1, $D$1:$D$3, 0))
 ```
+
+## 空行
+
+在excel数据生成table时可以看到空行，即为空但是算作一行数据，导入其他系统时空行可能导致报错。
 

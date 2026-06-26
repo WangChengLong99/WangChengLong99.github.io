@@ -2,7 +2,7 @@
 tags:
   - python
   - jupyter
-title: jupyter总结
+title: jupyter
 ---
 # 合并单元格
 
