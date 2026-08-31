@@ -8,5 +8,7 @@ tsconfig.tsbuildinfo
 .obsidian
 .quartz-cache
 private/
-.replit
+.replitcopilot
 replit.nix
+copilot
+.copilot-index
